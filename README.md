@@ -32,5 +32,8 @@ A little widget for tracking time during workdays. Can be paused for during brea
 
 ![Clock demonstration](Work_clock\clock.png)
 
+## [Game of Life](https://github.com/TheLaughingDuck/Small_Projects/tree/main/Game-of-Life)
+Implementations of Convways game of life. One running directly in the command line interface, and one in a tkinter window.
+
 ## [Todoist Taskmaker](https://github.com/TheLaughingDuck/Small_Projects/tree/main/todoist_taskmaker)
 A python tool I built for automatically creating many todoist tasks of a similar structure, for example "Review lecture 1", "Review lecture 2" etc. Provide your todoist access key an environment variable in a local .env file, and then run `main.py` and follow the instructions.
