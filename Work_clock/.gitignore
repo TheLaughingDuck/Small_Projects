@@ -1,0 +1,9 @@
+# Secrets
+.env
+data.sqlite3
+
+# Virtual environment
+clock_vnv
+
+# Old version
+clock.py
