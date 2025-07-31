@@ -30,7 +30,7 @@ unique(df)
 ## [Work Clock](https://github.com/TheLaughingDuck/Small_Projects/tree/main/Work_clock)
 A little widget for tracking time during workdays. Can be paused for during breaks, and it saves information such as start time, end time and total hours worked in a local sqlite database, which can be inspected by running "inspect_data.py". I suggest you create a desktop shortcut to "clock_v2.pyw", and then just click it at the start of each day. Close the application when you are finished for the day.
 
-![Clock demonstration](Work_clock\clock.png)
+![Clock demonstration](https://github.com/TheLaughingDuck/Small_Projects/blob/main/Work_clock/clock.png)
 
 ## [Game of Life](https://github.com/TheLaughingDuck/Small_Projects/tree/main/Game-of-Life)
 Implementations of Convways game of life. One running directly in the command line interface, and one in a tkinter window.
