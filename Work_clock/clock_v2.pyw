@@ -44,14 +44,23 @@ def query(sql: str, args=None):
 #%%
 
 import sqlite3
-def save_data(start_time, end_time, hours):
+def save_workday_data(start_time, end_time, hours):
     '''
     Creates a new record in the datebase file.
     '''
     conn = sqlite3.connect("data.sqlite3", isolation_level=None)
-    conn.execute("CREATE TABLE IF NOT EXISTS 'workdays' (date STR NOT NULL, start_time STR NOT NULL, end_time NOT NULL, hours REAL NOT NULL)")
+    conn.execute("CREATE TABLE IF NOT EXISTS 'workdays' (date STR DEFAULT NULL, start_time STR NOT NULL, end_time STR NOT NULL, hours REAL NOT NULL)")
 
     conn.execute(f"INSERT INTO 'workdays' (date, start_time, end_time, hours) VALUES ('{datetime.date(datetime.today())}', '{start_time}', '{end_time}', {hours})")
+
+def save_workblock_data(start_time, end_time, hours):
+    '''
+    Creates a new record in the datebase file.
+    '''
+    conn = sqlite3.connect("data.sqlite3", isolation_level=None)
+    conn.execute("CREATE TABLE IF NOT EXISTS 'workblocks' (date STR DEFAULT NULL, start_time STR NOT NULL, end_time STR NOT NULL, hours REAL NOT NULL)")
+
+    conn.execute(f"INSERT INTO 'workblocks' (date, start_time, end_time, hours) VALUES ('{datetime.date(datetime.today())}', '{start_time}', '{end_time}', {hours})")
 
 class TimerApp:
     GUI_WIDTH = 200
@@ -84,6 +93,10 @@ class TimerApp:
         self.bar_width = 45
         self.bar_height = self.GUI_WIDTH - 2 * self.padding
 
+        # Workblock timekeeping
+        self.workblock_start = time.time()
+        self.workblock_start_str = time.strftime('%H:%M')
+
         self.draw_progress_bar()
         self.update_bar()
 
@@ -108,6 +121,8 @@ class TimerApp:
             # self.canvas.create_arc(10, 10, self.GUI_SIZE - 10, self.GUI_SIZE - 10, start=90, extent=-(elapsed / self.INTERVAL) * 360, fill="red", tags="progress")
 
             self.canvas.create_rectangle(self.padding, self.padding, self.padding + (1-proportion_left) * self.bar_height, self.padding + self.bar_width, fill="darkred", width=2, tags="progress")
+            completion_percentage = round(100 * (self.session_count * 3600 + elapsed) / (5*3600))
+            self.session_label.config(text=f"Workday completion: {completion_percentage} %")
 
         # # Draw hand (based on progress, not the current time)
         # x = self.center + self.radius * math.cos(angle)
@@ -127,7 +142,10 @@ class TimerApp:
             self.running = True
             self.elapsed_time = 0
             self.session_count += 1
-            self.session_label.config(text=f"Sessions Completed: {self.session_count}")
+            #self.session_label.config(text=f"Sessions Completed: {self.session_count}")
+            
+            #completion_percentage = round(100 * (self.session_count * 3600 + elapsed) / (5*3600), 1)
+            #self.session_label.config(text=f"Workday completion: {completion_percentage} %")
             #messagebox.showinfo("Session Complete!", f"You completed session #{self.session_count}!")
 
             # Start over
@@ -136,20 +154,38 @@ class TimerApp:
         self.root.after(1000, self.update_bar)
 
     def toggle_timer(self, event=None):
+        # PAUSE the clock!
         if self.running:
             self.running = False
             self.elapsed_time += time.time() - self.start_time
+
+            # Update the workblock database
+            hours = str(round((time.time() - self.workblock_start) / 3600, 2))
+            save_workblock_data(self.workblock_start_str, time.strftime('%H:%M'), hours)
+
+        # START the clock again!
         else:
             self.running = True
             self.start_time = time.time()
 
+            # Start over timekeeping for the new workblock
+            self.workblock_start = time.time()
+            self.workblock_start_str = time.strftime('%H:%M')        
+
     def on_close(self):
+        # If still running, also log the current workblock before submitting the workday and ending the program.
+        # I do this by just toggling the clock on again, which triggers a save to the workblock table.
+        if self.running:
+            hours = str(round((time.time() - self.workblock_start) / 3600, 2))
+            save_workblock_data(self.workblock_start_str, time.strftime('%H:%M'), hours)
+
+        # Don't this is actually necessary here? It was at the top of on_close before.
         self.running = False
 
         # Save todays data in the database file
         self.end_time_HH_MM = time.strftime('%H:%M')
         hours = str(round(self.session_count + (1-self.remaining/self.INTERVAL), 1))
-        save_data(self.start_time_HH_MM, self.end_time_HH_MM, hours)
+        save_workday_data(self.start_time_HH_MM, self.end_time_HH_MM, hours)
         
         # # Assemble sql PUT request that details what time the workday started and ended, and how many hours I studied.
         # self.end_time_HH_MM = time.strftime('%H:%M')
